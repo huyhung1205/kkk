@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Lovely</title>
+  <style>
+    @font-face {
+      font-family: 'MyFont';
+      src: url('./DF.ttf') format('truetype');
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1e2a38, #16202b);
+      color: #cfd8dc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    #ui {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      padding: 15px 20px;
+      border-radius: 12px;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+      box-sizing: border-box;
+      max-height: 80vh;
+      overflow-y: scroll;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      display: none;
+    }
+
+    #ui::-webkit-scrollbar {
+      display: none;
+    }
+
+    #ui label {
+      font-weight: 600;
+      font-size: 15px;
+      display: block;
+      margin-bottom: 6px;
+      color: #a8c0ff;
+    }
+
+    #ui textarea {
+      width: 90%;
+      height: 70px;
+      margin-bottom: 12px;
+      background: #1b1b1b;
+      border: 1px solid #3d3d3d;
+      color: #ddd;
+      font-size: 14px;
+      resize: vertical;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      transition: border-color 0.3s ease;
+      overflow-y: scroll;
+      scrollbar-width: none;
+    }
+
+    #ui textarea::-webkit-scrollbar {
+      display: none;
+    }
+
+    #ui textarea:focus {
+      border-color: #66aaff;
+      outline: none;
+      background: #222;
+    }
+
+    #musicSelector {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 15px;
+      border-radius: 12px;
+      border: none;
+      background: #223344;
+      color: #e0e6f3;
+      text-align-last: center;
+      text-align: center;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #musicSelector:hover {
+      background-color: #2a3b56;
+    }
+
+    #buttonContainer {
+      display: flex;
+      gap: 12px;
+    }
+
+    #startBtn,
+    #qrBtn {
+      flex: 1;
+      padding: 12px 0;
+      background: #4a90e2;
+      border: none;
+      color: white;
+      font-weight: 700;
+      font-size: 17px;
+      cursor: pointer;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(74, 144, 226, 0.6);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #startBtn:hover {
+      background: #6aa0ff;
+      box-shadow: 0 8px 25px rgba(106, 160, 255, 0.8);
+    }
+
+    #shareLink {
+      display: inline-block;
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+      color: #42a5f5;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 15px;
+      user-select: all;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .heart-frame {
+      position: relative;
+      width: 320px;
+      height: 296px;
+      margin: 20px auto;
+    }
+
+    #finalCanvas {
+      cursor: pointer;
+      display: block;
+      margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-text {
+      text-align: center;
+      color: #ff679a;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    #musicBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #ff679a, #ff8690);
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 103, 154, 0.4);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #musicBtn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(255, 103, 154, 0.6);
+    }
+
+    #musicBtn.playing {
+      background: linear-gradient(45deg, #63c7c7, #76b776);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="ui">
+    <!-- UI đã được ẩn và không cần thiết nữa -->
+  </div>
+
+  <!-- Nút phát nhạc -->
+  <button id="musicBtn" title="Phát/Dừng nhạc">🎵</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+  <script>
+    // Mảng chứa các dòng chữ mặc định
+    const defaultTextLines = [
+      "❤️",
+      "❤️",
+      "Anh yêu em ❤️",
+      "❤️",
+      "🍀",
+      "🌻",
+      "🌹",
+      "🌼",
+      "🌷",
+      "🌺",
+      "🌸",
+      "🌷",
+      "🌹",
+      "I love you",
+      "I love you",
+      "I love you",
+      "I love you",
+      "I love you",
+      "I love you",
+      "I love you"
+    ];
+
+    // Mảng chứa các đường dẫn ảnh mặc định
+    const defaultImageLinks = [
+      "./TvH (11).jpg",
+      "./IMG_0640.JPG",
+      "./IMG_9647.JPG",
+      "./IMG_0294.JPG",
+      "./89589752_p0.jpg"
+    ];
+
+    // Biến lưu đường dẫn nhạc
+    const musicPath = "./music/e.mp3";
+
+    // Khởi tạo dữ liệu
+    let images = defaultImageLinks;
+    let textLines = defaultTextLines;
+    let audio = null;
+
+    // Hàm phát nhạc
+    function playMusic() {
+      if (audio) {
+        audio.pause();
+        audio = null;
+        musicBtn.textContent = '🎵';
+        musicBtn.classList.remove('playing');
+        return;
+      }
+
+      audio = new Audio(musicPath);
+      audio.loop = true;
+      audio.volume = 0.5;
+      audio.play().then(() => {
+        musicBtn.textContent = '⏸️';
+        musicBtn.classList.add('playing');
+      }).catch(error => {
+        console.warn('Không thể phát nhạc:', error);
+        musicBtn.textContent = '❌';
+      });
+    }
+
+    // Thiết lập Three.js
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000);
+    camera.position.z = 400;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+
+    document.body.appendChild(renderer.domElement);
+
+    // Tạo ngôi sao
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 800;
+    const starPos = [];
+
+    for (let i = 0; i < starCount; i++) {
+      const r = THREE.MathUtils.randFloat(200, 1000);
+      // Sửa lỗi: giới hạn giá trị để tránh NaN
+      const u = THREE.MathUtils.randFloat(-1, 1);
+      const theta = Math.acos(Math.max(-1, Math.min(1, u)));
+      const phi = THREE.MathUtils.randFloat(0, 2 * Math.PI);
+
+      const x = r * Math.sin(theta) * Math.cos(phi);
+      const y = r * Math.sin(theta) * Math.sin(phi);
+      const z = r * Math.cos(theta);
+
+      // Kiểm tra giá trị hợp lệ
+      if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+        starPos.push(x, y, z);
+      }
+    }
+
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+
+    // Tạo texture hình tròn cho ngôi sao
+    function createStarTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+
+      // Tạo gradient hình tròn
+      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 32, 32);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      return texture;
+    }
+
+    const starsMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 4,
+      transparent: true,
+      opacity: 0.9,
+      sizeAttenuation: true,
+      map: createStarTexture()
+    });
+    scene.add(new THREE.Points(starGeo, starsMat));
+
+    const starPositions = [];
+    for (let i = 0; i < starCount; i++) {
+      starPositions.push(new THREE.Vector3(starPos[i * 3], starPos[i * 3 + 1], starPos[i * 3 + 2]));
+    }
+
+    // Tạo sao băng
+    const shootingStars = [];
+    const shootingStarCount = 8;
+
+    for (let i = 0; i < shootingStarCount; i++) {
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(30);
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+      const line = new THREE.Line(geometry, material);
+
+      const pos = new THREE.Vector3(
+        THREE.MathUtils.randFloat(-1200, 1200),
+        THREE.MathUtils.randFloat(200, 800),
+        THREE.MathUtils.randFloat(-1200, 1200)
+      );
+      const velocity = new THREE.Vector3(
+        THREE.MathUtils.randFloatSpread(2),
+        -2 - Math.random() * 2,
+        THREE.MathUtils.randFloatSpread(2)
+      ).normalize().multiplyScalar(4 + Math.random() * 4);
+
+      shootingStars.push({ line, positions, pos, velocity });
+      scene.add(line);
+    }
+
+    // Tạo sao băng từ các ngôi sao
+    const shootingStarsFromStars = [];
+    const shootingStarCountFromStars = 40;
+
+    for (let i = 0; i < shootingStarCountFromStars; i++) {
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(30);
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+      const line = new THREE.Line(geometry, material);
+
+      const startIndex = Math.floor(Math.random() * starPositions.length);
+      const pos = starPositions[startIndex].clone();
+      const dir = pos.clone().normalize();
+      const velocity = dir.clone().add(new THREE.Vector3(
+        THREE.MathUtils.randFloatSpread(1),
+        THREE.MathUtils.randFloatSpread(1),
+        THREE.MathUtils.randFloatSpread(1)
+      )).normalize().multiplyScalar(6 + Math.random() * 4);
+
+      shootingStarsFromStars.push({ line, positions, pos, velocity });
+      scene.add(line);
+    }
+
+    // Tạo hình ảnh và văn bản
+    const textureLoader = new THREE.TextureLoader();
+    const imageGroup = new THREE.Group();
+    const textGroup = new THREE.Group();
+    scene.add(imageGroup);
+    scene.add(textGroup);
+
+    function randomPosOnSphere(radius) {
+      // Sửa lỗi: giới hạn giá trị để tránh NaN
+      const u = THREE.MathUtils.randFloat(-1, 1);
+      const theta = Math.acos(Math.max(-1, Math.min(1, u)));
+      const phi = THREE.MathUtils.randFloatSpread(2 * Math.PI);
+
+      const x = radius * Math.sin(theta) * Math.cos(phi);
+      const y = radius * Math.sin(theta) * Math.sin(phi);
+      const z = radius * Math.cos(theta);
+
+      // Kiểm tra giá trị hợp lệ
+      if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+        return new THREE.Vector3(x, y, z);
+      } else {
+        // Trả về vị trí mặc định nếu có lỗi
+        return new THREE.Vector3(radius, 0, 0);
+      }
+    }
+
+    function createTextSprite(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 3072;
+      canvas.height = 3072;
+      const ctx = canvas.getContext('2d');
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(material);
+
+      const colors = ['#ff679a', '#63c7c7', '#ff8690'];
+      let colorIndex = 0;
+
+      function drawText() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = colors[colorIndex];
+        ctx.font = 'bold 900px MyFont';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Thêm stroke như trong code obfuscated
+        ctx.strokeStyle = '#cfd8dc';
+        ctx.lineWidth = 1;
+        ctx.strokeText(text, canvas.width / 2, 100);
+
+        // Vẽ chữ chính
+        ctx.fillText(text, canvas.width / 2, 100);
+
+        texture.needsUpdate = true;
+      }
+
+      drawText();
+
+      // Thay đổi màu mỗi 10 giây như trong code obfuscated
+      setInterval(() => {
+        colorIndex = (colorIndex + 1) % colors.length;
+        drawText();
+      }, 10000);
+
+      return sprite;
+    }
+
+    const planes = [];
+    const labels = [];
+    const imagePositions = [];
+    const textPositions = [];
+    const boxCount = 30;
+    const radiusImage = 300;
+    const radiusText = 350;
+
+    function initScene() {
+      imageGroup.clear();
+      textGroup.clear();
+      planes.length = 0;
+      labels.length = 0;
+      imagePositions.length = 0;
+      textPositions.length = 0;
+
+      if (images.length === 0 || textLines.length === 0) return;
+
+      // Tạo hình ảnh
+      for (let i = 0; i < boxCount; i++) {
+        const texture = textureLoader.load(images[i % images.length], function (loadedTexture) {
+          // Cài đặt texture để hiển thị màu sắc đúng
+          loadedTexture.encoding = THREE.sRGBEncoding;
+          loadedTexture.flipY = true;
+          loadedTexture.generateMipmaps = true;
+
+          // Tính toán tỉ lệ ảnh sau khi load
+          const aspectRatio = loadedTexture.image.width / loadedTexture.image.height;
+          const baseSize = 30 + Math.random() * 15;
+          const width = baseSize;
+          const height = baseSize / aspectRatio;
+
+          // Cập nhật geometry với tỉ lệ đúng
+          const geometry = new THREE.PlaneGeometry(width, height);
+          const material = new THREE.MeshBasicMaterial({
+            map: loadedTexture,
+            transparent: true,
+            alphaTest: 0.1,
+            side: THREE.DoubleSide
+          });
+          const mesh = new THREE.Mesh(geometry, material);
+
+          const pos = randomPosOnSphere(radiusImage);
+          imagePositions.push(pos);
+
+          mesh.position.set(0, 0, 0);
+          mesh.scale.set(0.1, 0.1, 0.1);
+          mesh.userData = {
+            progress: 0,
+            speed: (0.001 + Math.random() * 0.001) * 1.0,
+            delayOffset: i * 0.01
+          };
+
+          imageGroup.add(mesh);
+          planes.push(mesh);
+        });
+      }
+
+      // Tạo văn bản
+      for (let i = 0; i < boxCount * 2; i++) {
+        const text = textLines[i % textLines.length];
+        const sprite = createTextSprite(text);
+
+        const pos = randomPosOnSphere(radiusText);
+        textPositions.push(pos);
+
+        sprite.position.set(0, 0, 0);
+        sprite.scale.set(15.0, 15.0, 15.0);
+        sprite.visible = true;
+        sprite.userData = {
+          progress: 0,
+          speed: (0.001 + Math.random() * 0.001) * 1.0,
+          delayOffset: i * 0.01
+        };
+
+        textGroup.add(sprite);
+        labels.push(sprite);
+      }
+    }
+
+    // Khởi tạo scene
+    initScene();
+
+    // Xử lý chuột
+    let targetRotX = 0;
+    let targetRotY = 0;
+    let currentRotX = 0;
+    let currentRotY = 0;
+    const maxRotX = Math.PI / 6;
+    const maxRotY = Math.PI / 4;
+
+    function updateTargetRotation(x, y) {
+      const normalizedX = x / window.innerWidth * 2 - 1;
+      const normalizedY = y / window.innerHeight * 2 - 1;
+      targetRotY = normalizedX * maxRotY;
+      targetRotX = normalizedY * maxRotX;
+    }
+
+    window.addEventListener('mousemove', event => {
+      updateTargetRotation(event.clientX, event.clientY);
+    });
+
+    window.addEventListener('touchmove', event => {
+      if (event.touches.length > 0) {
+        const touch = event.touches[0];
+        updateTargetRotation(touch.clientX, touch.clientY);
+      }
+    }, { passive: true });
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      currentRotX += (targetRotX - currentRotX) * 0.05;
+      currentRotY += (targetRotY - currentRotY) * 0.05;
+
+      const distance = 400;
+      camera.position.x = distance * Math.sin(currentRotY) * Math.cos(currentRotX);
+      camera.position.y = distance * Math.sin(currentRotX);
+      camera.position.z = distance * Math.cos(currentRotY) * Math.cos(currentRotX);
+      camera.lookAt(0, 0, 0);
+
+      const targetPos = pos => new THREE.Vector3(pos.x, pos.y + 400, pos.z);
+
+      // Cập nhật hình ảnh
+      planes.forEach((plane, index) => {
+        let progress = plane.userData.progress - plane.userData.delayOffset;
+        if (progress < 0) progress = 0;
+        if (progress > 1) progress = 1;
+
+        const target = targetPos(imagePositions[index]);
+        plane.position.lerpVectors(target, imagePositions[index], progress);
+
+        let scale = 0.1 + progress * (1.5 - 0.1);
+        plane.scale.set(scale, scale, scale);
+
+        plane.userData.progress += plane.userData.speed;
+        if (plane.userData.progress > 1 + plane.userData.delayOffset) {
+          plane.userData.progress = 0;
+        }
+      });
+
+      // Cập nhật văn bản
+      labels.forEach((label, index) => {
+        if (label && textPositions[index]) {
+          let progress = label.userData.progress - label.userData.delayOffset;
+          if (progress < 0) progress = 0;
+          if (progress > 1) progress = 1;
+
+          const target = targetPos(textPositions[index]);
+          label.position.lerpVectors(target, textPositions[index], progress);
+
+          let scale = 15.0 + progress * (25.0 - 15.0);
+          label.scale.set(scale, scale, scale);
+          label.visible = true;
+
+          label.userData.progress += label.userData.speed;
+          if (label.userData.progress > 1 + label.userData.delayOffset) {
+            label.userData.progress = 0;
+          }
+        }
+      });
+
+      // Cập nhật sao băng
+      shootingStars.forEach(star => {
+        star.pos.add(star.velocity);
+        for (let i = 0; i < 10; i++) {
+          const index = i * 3;
+          star.positions[index] = star.pos.x - star.velocity.x * i * 0.8;
+          star.positions[index + 1] = star.pos.y - star.velocity.y * i * 0.8;
+          star.positions[index + 2] = star.pos.z - star.velocity.z * i * 0.8;
+        }
+        star.line.geometry.attributes.position.needsUpdate = true;
+
+        if (star.pos.y < -800 || star.pos.length() > 1500) {
+          star.pos.set(
+            THREE.MathUtils.randFloat(-1200, 1200),
+            THREE.MathUtils.randFloat(200, 800),
+            THREE.MathUtils.randFloat(-1200, 1200)
+          );
+          const velocity = new THREE.Vector3(
+            THREE.MathUtils.randFloatSpread(2),
+            -2 - Math.random() * 2,
+            THREE.MathUtils.randFloatSpread(2)
+          ).normalize().multiplyScalar(4 + Math.random() * 4);
+          star.velocity.copy(velocity);
+        }
+      });
+
+      // Cập nhật sao băng từ ngôi sao
+      shootingStarsFromStars.forEach(star => {
+        star.pos.add(star.velocity);
+        for (let i = 0; i < 10; i++) {
+          const index = i * 3;
+          star.positions[index] = star.pos.x - star.velocity.x * i * 0.5;
+          star.positions[index + 1] = star.pos.y - star.velocity.y * i * 0.5;
+          star.positions[index + 2] = star.pos.z - star.velocity.z * i * 0.5;
+        }
+        star.line.geometry.attributes.position.needsUpdate = true;
+
+        if (star.pos.length() > 1200) {
+          const randomIndex = Math.floor(Math.random() * starPositions.length);
+          star.pos.copy(starPositions[randomIndex]);
+          const randomDir = star.pos.clone().normalize();
+          star.velocity.copy(randomDir.add(new THREE.Vector3(
+            THREE.MathUtils.randFloatSpread(1),
+            THREE.MathUtils.randFloatSpread(1),
+            THREE.MathUtils.randFloatSpread(1)
+          )).normalize().multiplyScalar(6 + Math.random() * 4));
+        }
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    // Bắt đầu animation
+    animate();
+
+    // Xử lý resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Xử lý nút phát nhạc
+    const musicBtn = document.getElementById('musicBtn');
+    musicBtn.addEventListener('click', playMusic);
+  </script>
+</body>
+
+</html>
