@@ -300,12 +300,11 @@
 
     // Tạo ngôi sao
     const starGeo = new THREE.BufferGeometry();
-    const starCount = 800;
+    const starCount = 400; // Giảm từ 800 xuống 400
     const starPos = [];
 
     for (let i = 0; i < starCount; i++) {
-      const r = THREE.MathUtils.randFloat(200, 1000);
-      // Sửa lỗi: giới hạn giá trị để tránh NaN
+      const r = THREE.MathUtils.randFloat(200, 800); // Giảm phạm vi
       const u = THREE.MathUtils.randFloat(-1, 1);
       const theta = Math.acos(Math.max(-1, Math.min(1, u)));
       const phi = THREE.MathUtils.randFloat(0, 2 * Math.PI);
@@ -314,7 +313,6 @@
       const y = r * Math.sin(theta) * Math.sin(phi);
       const z = r * Math.cos(theta);
 
-      // Kiểm tra giá trị hợp lệ
       if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
         starPos.push(x, y, z);
       }
@@ -388,11 +386,11 @@
 
     // Tạo sao băng từ các ngôi sao
     const shootingStarsFromStars = [];
-    const shootingStarCountFromStars = 40;
+    const shootingStarCountFromStars = 20; // Giảm từ 40 xuống 20
 
     for (let i = 0; i < shootingStarCountFromStars; i++) {
       const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(30);
+      const positions = new Float32Array(20); // Giảm từ 30 xuống 20
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
       const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
@@ -439,8 +437,8 @@
 
     function createTextSprite(text) {
       const canvas = document.createElement('canvas');
-      canvas.width = 3072;
-      canvas.height = 3072;
+      canvas.width = 2048; // Giảm từ 3072 xuống 1024
+      canvas.height = 2048; // Giảm từ 3072 xuống 256
       const ctx = canvas.getContext('2d');
 
       const texture = new THREE.CanvasTexture(canvas);
@@ -454,17 +452,17 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = colors[colorIndex];
-        ctx.font = 'bold 900px MyFont';
+        ctx.font = 'bold 500px MyFont'; // Giảm từ 900px xuống 120px
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // Thêm stroke như trong code obfuscated
         ctx.strokeStyle = '#cfd8dc';
         ctx.lineWidth = 1;
-        ctx.strokeText(text, canvas.width / 2, 100);
+        ctx.strokeText(text, canvas.width / 2, canvas.height / 2); // Sửa vị trí
 
         // Vẽ chữ chính
-        ctx.fillText(text, canvas.width / 2, 100);
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2); // Sửa vị trí
 
         texture.needsUpdate = true;
       }
@@ -484,7 +482,7 @@
     const labels = [];
     const imagePositions = [];
     const textPositions = [];
-    const boxCount = 30;
+    const boxCount = 15; // Giảm từ 30 xuống 15
     const radiusImage = 300;
     const radiusText = 350;
 
@@ -547,7 +545,7 @@
         textPositions.push(pos);
 
         sprite.position.set(0, 0, 0);
-        sprite.scale.set(15.0, 15.0, 15.0);
+        sprite.scale.set(8.0, 8.0, 8.0); // Giảm từ 15.0 xuống 8.0
         sprite.visible = true;
         sprite.userData = {
           progress: 0,
@@ -632,7 +630,7 @@
           const target = targetPos(textPositions[index]);
           label.position.lerpVectors(target, textPositions[index], progress);
 
-          let scale = 15.0 + progress * (25.0 - 15.0);
+          let scale = 8.0 + progress * (15.0 - 8.0); // Giảm scale
           label.scale.set(scale, scale, scale);
           label.visible = true;
 
@@ -669,28 +667,30 @@
         }
       });
 
-      // Cập nhật sao băng từ ngôi sao
-      shootingStarsFromStars.forEach(star => {
-        star.pos.add(star.velocity);
-        for (let i = 0; i < 10; i++) {
-          const index = i * 3;
-          star.positions[index] = star.pos.x - star.velocity.x * i * 0.5;
-          star.positions[index + 1] = star.pos.y - star.velocity.y * i * 0.5;
-          star.positions[index + 2] = star.pos.z - star.velocity.z * i * 0.5;
-        }
-        star.line.geometry.attributes.position.needsUpdate = true;
+      // Cập nhật sao băng từ ngôi sao (giảm tần suất cập nhật)
+      if (Math.random() < 0.5) { // Chỉ cập nhật 50% thời gian
+        shootingStarsFromStars.forEach(star => {
+          star.pos.add(star.velocity);
+          for (let i = 0; i < 8; i++) { // Giảm từ 10 xuống 8
+            const index = i * 3;
+            star.positions[index] = star.pos.x - star.velocity.x * i * 0.5;
+            star.positions[index + 1] = star.pos.y - star.velocity.y * i * 0.5;
+            star.positions[index + 2] = star.pos.z - star.velocity.z * i * 0.5;
+          }
+          star.line.geometry.attributes.position.needsUpdate = true;
 
-        if (star.pos.length() > 1200) {
-          const randomIndex = Math.floor(Math.random() * starPositions.length);
-          star.pos.copy(starPositions[randomIndex]);
-          const randomDir = star.pos.clone().normalize();
-          star.velocity.copy(randomDir.add(new THREE.Vector3(
-            THREE.MathUtils.randFloatSpread(1),
-            THREE.MathUtils.randFloatSpread(1),
-            THREE.MathUtils.randFloatSpread(1)
-          )).normalize().multiplyScalar(6 + Math.random() * 4));
-        }
-      });
+          if (star.pos.length() > 1200) {
+            const randomIndex = Math.floor(Math.random() * starPositions.length);
+            star.pos.copy(starPositions[randomIndex]);
+            const randomDir = star.pos.clone().normalize();
+            star.velocity.copy(randomDir.add(new THREE.Vector3(
+              THREE.MathUtils.randFloatSpread(1),
+              THREE.MathUtils.randFloatSpread(1),
+              THREE.MathUtils.randFloatSpread(1)
+            )).normalize().multiplyScalar(6 + Math.random() * 4));
+          }
+        });
+      }
 
       renderer.render(scene, camera);
     }
