@@ -1,2 +1,1 @@
-khgcghvhg
-# github.com/huyhung1205/kkk/k.html
+#https://huyhung1205.github.io/kkk/k.html
