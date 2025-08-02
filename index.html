@@ -19,37 +19,153 @@
       font-family: 'Segoe UI', sans-serif;
       overflow: hidden;
     }
+
+    #musicButton {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: linear-gradient(45deg, #ff679a, #63c7c7);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 103, 154, 0.3);
+    }
+
+    #musicButton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 103, 154, 0.4);
+    }
   </style>
 </head>
 
 <body>
+  <button id="musicButton">🎵 Phát nhạc</button>
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
   <script>
     // Mảng chuỗi cho văn bản
     const textLines = [
-      "ha ha ha",
-      "Thành công rồi"
+      "Anh yêu em ❤️",
+      "Yêu em",
+      "Em là tất cả của anh",
+      "🌻",
+      "🌷",
+      "Cảm ơn em đã đến",
+      "🌼",
+      "Em là món quà tuyệt nhất",
+      "🌷",
+      "Anh muốn nắm tay em mãi mãi",
+      "🍀",
+      "Mãi mãi bên nhau",
+      "🌹",
+      "Hạnh phúc khi bên em",
+      "🌺",
+      "Em là ánh sáng của anh",
+      "🌸",
+      "Anh sẽ yêu em mãi mãi",
+      "🌹"
     ];
 
     // Mảng chuỗi cho link ảnh
     const images = [
+      "IMG_0640.JPG",
+      "IMG_7453.JPG",
+      "IMG_7770.JPG",
+      "IMG_8063.JPG",
+      "IMG_9605.JPG",
+      "IMG_6663.JPG"
     ];
 
     // Địa chỉ nhạc - tự động phát khi load trang
-    const musicPath = "./music/e.mp3";
+    const musicPath = "./LeDuong.mp3";
 
     let audio = null;
+    let isPlaying = false;
+    let hasInteracted = false;
 
-    // Tự động phát nhạc khi load trang
-    function autoPlayMusic() {
-      if (musicPath) {
-        audio = new Audio(musicPath);
-        audio.loop = true;
-        audio.volume = 0.5;
+    // Khởi tạo audio
+    function initAudio() {
+      if (!audio) {
+        try {
+          audio = new Audio(musicPath);
+          audio.loop = true;
+          audio.volume = 1.0;
+          
+          audio.addEventListener('play', () => {
+            isPlaying = true;
+            document.getElementById('musicButton').textContent = '⏸️ Tạm dừng';
+            console.log('Nhạc đang phát');
+          });
+          
+          audio.addEventListener('pause', () => {
+            isPlaying = false;
+            document.getElementById('musicButton').textContent = '🎵 Phát nhạc';
+            console.log('Nhạc đã tạm dừng');
+          });
+          
+          audio.addEventListener('error', (e) => {
+            console.error('Lỗi audio:', e);
+          });
+        } catch (error) {
+          console.error('Lỗi khởi tạo audio:', error);
+        }
+      }
+    }
+
+    // Xử lý nút play/pause
+    function toggleMusic() {
+      if (!audio) {
+        initAudio();
+      }
+      
+      if (isPlaying) {
+        audio.pause();
+      } else {
         audio.play().catch(error => {
-          console.warn('Không thể phát nhạc tự động:', error);
+          console.error('Không thể phát nhạc:', error);
         });
+      }
+    }
+
+    // Phát nhạc khi có tương tác
+    function playMusicOnInteraction() {
+      if (!hasInteracted) {
+        hasInteracted = true;
+        if (!audio) {
+          initAudio();
+        }
+        audio.play().catch(error => {
+          console.error('Không thể phát nhạc:', error);
+        });
+      }
+    }
+
+    // Thêm event listeners cho tương tác
+    function addInteractionListeners() {
+      // Click
+      document.addEventListener('click', playMusicOnInteraction, { once: true });
+      
+      // Touch
+      document.addEventListener('touchstart', playMusicOnInteraction, { once: true });
+      
+      // Key press
+      document.addEventListener('keydown', playMusicOnInteraction, { once: true });
+      
+      // Mouse move
+      document.addEventListener('mousemove', playMusicOnInteraction, { once: true });
+    }
+
+    // Khởi tạo audio và thêm listeners
+    function initAudioSystem() {
+      if (musicPath) {
+        initAudio();
+        addInteractionListeners();
       }
     }
 
@@ -64,7 +180,7 @@
 
     // Tạo ngôi sao
     const starGeo = new THREE.BufferGeometry();
-    const starCount = 800; // Giảm từ 800 xuống 400
+    const starCount = 1000;
     const starPos = [];
 
     for (let i = 0; i < starCount; i++) {
@@ -302,33 +418,6 @@
       }
     }, { passive: true });
 
-    // Tạo link chia sẻ
-    const shareLinkEl = document.getElementById('shareLink');
-    const copyMsg = document.getElementById('copyMsg');
-
-    // function createShareLink() {
-    //   const data = {
-    //     textLines: textLines,
-    //     imageLinks: images,
-    //     music: musicPath
-    //   };
-    //   const jsonData = JSON.stringify(data);
-    //   const encoded = btoa(encodeURIComponent(jsonData).replace(/%(\w{2})/g, (_, hex) => String.fromCharCode('0x' + hex))).replace(/[+/=]/g, char => ({ '+': '-', '/': '_', '=': '' }[char] || ''));
-    //   const url = new URL(location.origin + location.pathname);
-    //   url.hash = 'data=' + encoded;
-    //   shareLinkEl.href = url.toString();
-    //   shareLinkEl.textContent = url.toString();
-    //   shareLinkEl.style.display = 'inline-block';
-    // }
-
-    // shareLinkEl.addEventListener('click', () => {
-    //   navigator.clipboard.writeText(shareLinkEl.href).then(() => {
-    //     copyMsg.style.display = 'inline';
-    //     setTimeout(() => {
-    //       copyMsg.style.display = 'none';
-    //     }, 2000);
-    //   }).catch(error => console.error('Không thể sao chép:', error));
-    // });
 
     function animate() {
       requestAnimationFrame(animate);
@@ -380,7 +469,7 @@
 
     // Khởi tạo scene và bắt đầu animation ngay khi load trang
     window.addEventListener('load', () => {
-      autoPlayMusic();
+      initAudioSystem();
       initScene();
       for (let i = 0; i < planes.length; i++) {
         let text = '';
@@ -389,7 +478,9 @@
         }
         updateLabelText(i, text);
       }
-      createShareLink();
+      
+      // Thêm event listener cho nút play
+      document.getElementById('musicButton').addEventListener('click', toggleMusic);
     });
 
     animate();
